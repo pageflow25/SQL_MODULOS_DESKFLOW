@@ -23,7 +23,9 @@ unidades_filtradas AS (
         ue.id,
         ue.cliente_id,
         ue.forma_pagamento,
-        ue.escola_id
+        ue.escola_id,
+        ue.client_id_venda,
+        ue.vendedor_id_venda
     FROM unidades_escolares ue
     CROSS JOIN parametros p
     WHERE ue.escola_id = p.escola_id
@@ -161,6 +163,9 @@ itens_produto AS (
         qe.formulario_id,
         qe.especificacao_id,
         qe.id_produto,
+        (SELECT uf.client_id_venda FROM unidades_filtradas uf WHERE uf.escola_id = qe.escola_id LIMIT 1) AS client_id_venda,
+        (SELECT uf.vendedor_id_venda FROM unidades_filtradas uf WHERE uf.escola_id = qe.escola_id LIMIT 1) AS vendedor_id_venda,
+        (SELECT uf.forma_pagamento FROM unidades_filtradas uf WHERE uf.escola_id = qe.escola_id LIMIT 1) AS forma_pagamento_venda,
         (
             UPPER(TRIM(REGEXP_REPLACE(REGEXP_REPLACE(
                 COALESCE(
@@ -310,8 +315,9 @@ SELECT json_build_object(
     'identifier', 'PageFlow',
     'data', json_build_object(
         'id_escola', ip.escola_id,
-        'id_vendedor', 2285,
-        'id_forma_pagamento', '11',
+        'id_cliente', ip.client_id_venda,
+        'id_vendedor', ip.vendedor_id_venda,
+        'id_forma_pagamento', ip.forma_pagamento_venda,
         'itens', COALESCE(
             json_agg(
                 json_build_object(
@@ -490,5 +496,5 @@ SELECT json_build_object(
     )
 )
 FROM itens_produto ip
-GROUP BY ip.escola_id, ip.tipo_agrupamento
+GROUP BY ip.escola_id, ip.tipo_agrupamento, ip.client_id_venda, ip.vendedor_id_venda, ip.forma_pagamento_venda
 ORDER BY ip.escola_id, ip.tipo_agrupamento DESC;
