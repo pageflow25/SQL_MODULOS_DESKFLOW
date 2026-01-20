@@ -16,7 +16,9 @@ unidades_filtradas AS (
         ue.id,
         ue.cliente_id,
         ue.forma_pagamento,
-        ue.escola_id
+        ue.escola_id,
+        ue.client_id_venda,
+        ue.vendedor_id_venda
     FROM unidades_escolares ue
     CROSS JOIN parametros p
     WHERE ue.escola_id = p.escola_id
@@ -76,6 +78,9 @@ itens_produto AS (
         eu.formulario_id,
         MAX(eu.especificacao_id) AS especificacao_id,
         MAX(eu.id_produto) AS id_produto,
+        (SELECT uf.client_id_venda FROM unidades_filtradas uf WHERE uf.id = eu.unidade_id LIMIT 1) AS client_id_venda,
+        (SELECT uf.vendedor_id_venda FROM unidades_filtradas uf WHERE uf.id = eu.unidade_id LIMIT 1) AS vendedor_id_venda,
+        (SELECT uf.forma_pagamento FROM unidades_filtradas uf WHERE uf.id = eu.unidade_id LIMIT 1) AS forma_pagamento_venda,
         
         -- PEGA O ID DA DISTRIBUIÇÃO AQUI PARA RELACIONAR COM A TABELA
         MAX(eu.id_distribuicao) AS id_distribuicao,
@@ -225,8 +230,8 @@ SELECT json_build_object(
     'identifier', 'PageFlow',
     'data', json_build_object(
         'id_cliente', ip.cliente_id,
-        'id_vendedor', 2285,
-        'id_forma_pagamento', '11',
+        'id_vendedor', ip.vendedor_id_venda,
+        'id_forma_pagamento', ip.forma_pagamento_venda,
         'itens', COALESCE(
             json_agg(
                 json_build_object(
@@ -405,5 +410,5 @@ SELECT json_build_object(
     )
 )
 FROM itens_produto ip
-GROUP BY ip.unidade_id, ip.cliente_id, ip.tipo_agrupamento
+GROUP BY ip.unidade_id, ip.cliente_id, ip.tipo_agrupamento, ip.client_id_venda, ip.vendedor_id_venda, ip.forma_pagamento_venda
 ORDER BY ip.unidade_id, ip.tipo_agrupamento DESC;
