@@ -18,7 +18,7 @@ unidades_filtradas AS (
         ue.forma_pagamento,
         ue.escola_id,
         ue.client_id_venda,
-        ue.vendedor_id_venda
+        ue.vendedor_id
     FROM unidades_escolares ue
     CROSS JOIN parametros p
     WHERE ue.escola_id = p.escola_id
@@ -34,6 +34,7 @@ especificacoes_unidade AS (
         ef.id_produto,
         ef.corfrente,
         ef.corverso,
+        ef.id_papel,
         COALESCE(bt.altura, NULLIF(ef.altura, '')::numeric) AS altura_mm,
         COALESCE(bt.largura, NULLIF(ef.largura, '')::numeric) AS largura_mm,
         NULLIF(ef.gramatura_miolo, '') AS gramatura_miolo,
@@ -79,7 +80,7 @@ itens_produto AS (
         MAX(eu.especificacao_id) AS especificacao_id,
         MAX(eu.id_produto) AS id_produto,
         (SELECT uf.client_id_venda FROM unidades_filtradas uf WHERE uf.id = eu.unidade_id LIMIT 1) AS client_id_venda,
-        (SELECT uf.vendedor_id_venda FROM unidades_filtradas uf WHERE uf.id = eu.unidade_id LIMIT 1) AS vendedor_id_venda,
+        (SELECT uf.vendedor_id FROM unidades_filtradas uf WHERE uf.id = eu.unidade_id LIMIT 1) AS vendedor_id,
         (SELECT uf.forma_pagamento FROM unidades_filtradas uf WHERE uf.id = eu.unidade_id LIMIT 1) AS forma_pagamento_venda,
         
         -- PEGA O ID DA DISTRIBUIÇÃO AQUI PARA RELACIONAR COM A TABELA
@@ -121,6 +122,7 @@ itens AS (
         eu.id_produto,
         eu.corfrente,
         eu.corverso,
+        eu.id_papel,
         bi.descricao,
         bi.sub_grupo,
         bi."categoria_Prod",
@@ -141,6 +143,7 @@ componentes AS (
         i.id_produto,
         i.corfrente,
         i.corverso,
+        i.id_papel,
         i.sub_grupo,
         i."categoria_Prod",
         bc.id AS componente_id,
@@ -230,7 +233,7 @@ SELECT json_build_object(
     'identifier', 'PageFlow',
     'data', json_build_object(
         'id_cliente', ip.cliente_id,
-        'id_vendedor', ip.vendedor_id_venda,
+        'id_vendedor', ip.vendedor_id,
         'id_forma_pagamento', ip.forma_pagamento_venda,
         'itens', COALESCE(
             json_agg(
@@ -254,6 +257,7 @@ SELECT json_build_object(
                                         'altura', comp_sel.altura,
                                         'largura', comp_sel.largura,
                                         'quantidade_paginas', COALESCE(comp_sel.quantidade_paginas, 0),
+                                        'idgruposubstratoimpressao', comp_sel.id_papel,
                                         'gramaturasubstratoimpressao', COALESCE(
                                             comp_sel.gramatura_catalogo,
                                             NULLIF(replace(regexp_replace(comp_sel.gramatura_miolo::text, '[^0-9.,]', '', 'g'), ',', '.'), '')::numeric
@@ -375,6 +379,7 @@ SELECT json_build_object(
                                 comp.especificacao_id,
                                 comp.corfrente,
                                 comp.corverso,
+                                comp.id_papel,
                                 comp.sub_grupo,
                                 comp."categoria_Prod",
                                 comp.is_capa,
@@ -410,5 +415,5 @@ SELECT json_build_object(
     )
 )
 FROM itens_produto ip
-GROUP BY ip.unidade_id, ip.cliente_id, ip.tipo_agrupamento, ip.client_id_venda, ip.vendedor_id_venda, ip.forma_pagamento_venda
+GROUP BY ip.unidade_id, ip.cliente_id, ip.tipo_agrupamento, ip.client_id_venda, ip.vendedor_id, ip.forma_pagamento_venda
 ORDER BY ip.unidade_id, ip.tipo_agrupamento DESC;
