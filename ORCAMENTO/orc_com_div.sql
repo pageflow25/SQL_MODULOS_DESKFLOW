@@ -345,6 +345,10 @@ SELECT json_build_object(
                                         'descricao', comp_sel.descricao,
                                         'altura', comp_sel.altura,
                                         'largura', comp_sel.largura,
+                                        'gramaturasubstratoimpressao', 
+                                            CASE WHEN LOWER(comp_sel.descricao) LIKE '%folha%rosto%' 
+                                            THEN COALESCE(comp_sel.gramatura_catalogo, NULLIF(replace(regexp_replace(comp_sel.gramatura_miolo::text, '[^0-9.,]', '', 'g'), ',', '.'), '')::numeric)
+                                            ELSE NULL END,
                                         'perguntas_componente', COALESCE((
                                             SELECT json_agg(
                                                 json_build_object(
