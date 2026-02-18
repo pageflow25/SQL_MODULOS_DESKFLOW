@@ -6,9 +6,9 @@
 
 WITH parametros AS (
     SELECT
-        7 AS escola_id,
-        ARRAY[87,93,102,106,109,133] AS ids_produtos,
-        ARRAY['2026-01-22','2026-01-23','2026-01-27','2026-01-28']::date[] AS datas_saida,
+        15 AS escola_id,
+        ARRAY[110] AS ids_produtos,
+        ARRAY['2026-02-06']::date[] AS datas_saida,
 
 		-- DEFININDO COMO NULL PARA NÃO FILTRAR
 		NULL::text[] AS divisoes_logistica,
@@ -126,8 +126,8 @@ quantidades_por_cliente AS (
         qu.formulario_id,
         MAX(qu.quantidade) AS quantidade
     FROM quantidades_unicas qu
-    -- Filtra para somar apenas miolo, ignorando capa
-    WHERE LOWER(COALESCE(qu.tipo_arquivo, 'miolo')) = 'miolo'
+    -- Exclui capa para não duplicar contagem de quantidade
+    WHERE LOWER(COALESCE(qu.tipo_arquivo, '')) != 'capa'
     GROUP BY
         qu.escola_id,
         qu.cliente_id,
