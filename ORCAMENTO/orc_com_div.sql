@@ -12,6 +12,7 @@ WITH parametros AS (
         NULL::integer[] AS ids_formularios
 ),
 
+
 unidades_filtradas AS (
     SELECT
         ue.id,
@@ -68,7 +69,7 @@ especificacoes_unidade AS (
             p.datas_saida IS NULL
             OR NULLIF(dm.data_saida, '')::date = ANY(p.datas_saida)
             OR NULLIF(dm.data_saida, '') IS NULL
-        ) AND dm.status_distribuicao = 'pendente'
+        ) AND dm.status_distribuicao = 'pendente' AND dm.status_id = 1
         AND (p.ids_formularios IS NULL OR ap.formulario_id = ANY(p.ids_formularios))
 ),
 
@@ -243,7 +244,7 @@ SELECT json_build_object(
             json_agg(
                 json_build_object(
                     'id_produto', ip.id_produto,
-                    'descricao', ip.nome_arquivo,
+                    'titulo', ip.nome_arquivo,
                     'quantidade', ip.quantidade_total,
                     'usar_listapreco', 1,
                     'manter_estrutura_mod_produto', 1,
@@ -261,7 +262,10 @@ SELECT json_build_object(
                                         'altura', comp_sel.altura,
                                         'largura', comp_sel.largura,
                                         'quantidade_paginas', COALESCE(comp_sel.quantidade_paginas, 0),
-                                        'idgruposubstratoimpressao', comp_sel.idgruposubstratoimpressao,
+                                        'idgruposubstratoimpressao', CASE
+                                            WHEN UPPER(comp_sel."categoria_Prod") IN ('LIVRETO') THEN NULL
+                                            ELSE comp_sel.idgruposubstratoimpressao
+                                        END,
                                         'gramaturasubstratoimpressao', COALESCE(
                                             comp_sel.gramatura_catalogo,
                                             NULLIF(replace(regexp_replace(comp_sel.gramatura_miolo::text, '[^0-9.,]', '', 'g'), ',', '.'), '')::numeric
