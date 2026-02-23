@@ -14,7 +14,10 @@ WITH parametros AS (
 		NULL::text[] AS divisoes_logistica,
 		
 		-- DEFININDO COMO NULL PARA NÃO FILTRAR
-		NULL::integer[] AS dias_uteis_filtro
+		NULL::integer[] AS dias_uteis_filtro,
+
+		-- DEFININDO COMO NULL PARA NÃO FILTRAR
+		NULL::integer[] AS ids_formularios
 ),
 
 
@@ -72,7 +75,8 @@ especificacoes_unidade AS (
             p.datas_saida IS NULL
             OR NULLIF(dm.data_saida, '')::date = ANY(p.datas_saida)
             OR NULLIF(dm.data_saida, '') IS NULL
-        ) and dm.status_distribuicao = 'pendente'
+        ) AND dm.status_distribuicao = 'pendente'
+        AND (p.ids_formularios IS NULL OR ap.formulario_id = ANY(p.ids_formularios))
 ),
 
 distribuicao_ids AS (
@@ -95,6 +99,7 @@ distribuicao_ids AS (
             OR NULLIF(dm.data_saida, '')::date = ANY(p.datas_saida)
             OR NULLIF(dm.data_saida, '') IS NULL
         ) AND dm.status_distribuicao = 'pendente'
+        AND (p.ids_formularios IS NULL OR ap.formulario_id = ANY(p.ids_formularios))
 ),
 
 -- Primeiro, agrupa as quantidades únicas por cliente/unidade para evitar duplicação causada pelos JOINs

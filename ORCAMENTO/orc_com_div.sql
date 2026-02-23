@@ -8,7 +8,8 @@ WITH parametros AS (
         ARRAY[87,93,102,106,109,133] AS ids_produtos, 
         ARRAY['2026-01-22']::date[] AS datas_saida,
         NULL::text[] AS divisoes_logistica,
-        NULL::integer[] AS dias_uteis_filtro 
+        NULL::integer[] AS dias_uteis_filtro,
+        NULL::integer[] AS ids_formularios
 ),
 
 unidades_filtradas AS (
@@ -67,7 +68,8 @@ especificacoes_unidade AS (
             p.datas_saida IS NULL
             OR NULLIF(dm.data_saida, '')::date = ANY(p.datas_saida)
             OR NULLIF(dm.data_saida, '') IS NULL
-        ) and dm.status_distribuicao = 'pendente'
+        ) AND dm.status_distribuicao = 'pendente'
+        AND (p.ids_formularios IS NULL OR ap.formulario_id = ANY(p.ids_formularios))
 ),
 
 itens_produto AS (
