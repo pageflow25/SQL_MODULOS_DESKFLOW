@@ -85,7 +85,9 @@ itens_produto AS (
         (SELECT uf.vendedor_id_venda FROM unidades_filtradas uf WHERE uf.id = eu.unidade_id LIMIT 1) AS vendedor_id_venda,
         (SELECT uf.forma_pagamento FROM unidades_filtradas uf WHERE uf.id = eu.unidade_id LIMIT 1) AS forma_pagamento_venda,
         
-        -- PEGA O ID DA DISTRIBUIÇÃO AQUI PARA RELACIONAR COM A TABELA
+        -- PEGA O ID DA DISTRIBUIÇÃO POR TIPO DE COMPONENTE
+        MAX(CASE WHEN LOWER(eu.tipo_arquivo) = 'miolo' THEN eu.id_distribuicao END) AS id_distribuicao_miolo,
+        MAX(CASE WHEN LOWER(eu.tipo_arquivo) = 'capa'  THEN eu.id_distribuicao END) AS id_distribuicao_capa,
         MAX(eu.id_distribuicao) AS id_distribuicao,
         
         (
@@ -254,7 +256,7 @@ SELECT json_build_object(
                                 WHEN (comp_sel.is_miolo IS TRUE OR LOWER(COALESCE(comp_sel.descricao, '')) LIKE '%%miolo%%') THEN
                                     json_build_object(
                                         'id', comp_sel.id_componente,
-                                        'id_distribuicao', ip.id_distribuicao,
+                                        'id_distribuicao', COALESCE(ip.id_distribuicao_miolo, ip.id_distribuicao),
                                         'descricao', comp_sel.descricao,
                                         'altura', comp_sel.altura,
                                         'largura', comp_sel.largura,
@@ -292,7 +294,7 @@ SELECT json_build_object(
                                     json_strip_nulls(
                                         json_build_object(
                                             'id', comp_sel.id_componente,
-                                            'id_distribuicao', ip.id_distribuicao,
+                                            'id_distribuicao', COALESCE(ip.id_distribuicao_capa, ip.id_distribuicao),
                                             'descricao', comp_sel.descricao,
                                             'altura', comp_sel.altura,
                                             'largura', comp_sel.largura,

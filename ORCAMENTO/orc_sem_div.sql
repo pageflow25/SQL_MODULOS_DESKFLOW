@@ -6,7 +6,7 @@
 
 WITH parametros AS (
     SELECT
-        15 AS escola_id,
+        ARRAY[15]::integer[] AS ids_escolas,
         ARRAY[110] AS ids_produtos,
         ARRAY['2026-02-06']::date[] AS datas_saida,
 
@@ -31,7 +31,7 @@ unidades_filtradas AS (
         ue.vendedor_id_venda
     FROM unidades_escolares ue
     CROSS JOIN parametros p
-    WHERE ue.escola_id = p.escola_id
+    WHERE (p.ids_escolas IS NULL OR ue.escola_id = ANY(p.ids_escolas))
     AND (p.divisoes_logistica IS NULL OR ue.divisao_logistica = ANY(p.divisoes_logistica))
     AND (p.dias_uteis_filtro IS NULL OR ue.dias_uteis = ANY(p.dias_uteis_filtro))
 ),
